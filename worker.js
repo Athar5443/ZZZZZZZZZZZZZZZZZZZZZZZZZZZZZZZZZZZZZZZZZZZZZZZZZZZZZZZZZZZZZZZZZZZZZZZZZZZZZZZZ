@@ -2,6 +2,24 @@ export default {
   async fetch(request) {
     const url = new URL(request.url);
     const path = url.pathname.slice(1);
+    const method = request.method;
+
+    if (path === "api/sleep" && method === "POST") {
+      try {
+        const body = await request.json();
+        const originalUrl = body.url;
+
+        if (!originalUrl) return new Response("URL required", { status: 400 });
+
+        const zzzCode = encodeZzz(originalUrl);
+        const fullShortUrl = `${url.origin}/${zzzCode}`;
+
+        return Response.json({ status: "success", result: fullShortUrl });
+
+      } catch (e) {
+        return Response.json({ status: "error", message: e.message }, { status: 500 });
+      }
+    }
 
     if (path === "") {
       return new Response(renderHome(), {
@@ -10,22 +28,24 @@ export default {
     }
 
     if (path === "favicon.ico") return new Response(null, { status: 204 });
-    if (path === "robots.txt") {
-      return new Response("User-agent: *\nDisallow: /", { headers: { "content-type": "text/plain" } });
-    }
+    if (path === "robots.txt") return new Response("User-agent: *\nDisallow: /", { headers: {"content-type":"text/plain"} });
 
     try {
       const targetUrl = decodeZzz(path);
       return Response.redirect(targetUrl, 301);
     } catch (err) {
-      return new Response(renderError(), { 
-        status: 404,
-        headers: { "content-type": "text/html;charset=UTF-8" },
-      });
+      return new Response(renderError(), { status: 404, headers: { "content-type": "text/html" } });
     }
   },
 };
 
+function encodeZzz(text) {
+  let binary = "";
+  for (let i = 0; i < text.length; i++) {
+    binary += text.charCodeAt(i).toString(2).padStart(8, '0');
+  }
+  return binary.replace(/0/g, 'z').replace(/1/g, 'Z');
+}
 
 function decodeZzz(zzzString) {
   if (/[^zZ]/.test(zzzString)) throw new Error("Invalid characters");
@@ -40,10 +60,8 @@ function decodeZzz(zzzString) {
 
   if (output.toLowerCase().trim().startsWith("javascript:")) throw new Error("Script injection");
   if (!/^https?:\/\//i.test(output)) output = "https://" + output;
-  
   return output;
 }
-
 
 function renderHome() {
   return `
@@ -52,139 +70,94 @@ function renderHome() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zzz. Link Shortener</title>
+    <title>Zzz. API Mode</title>
     <style>
         * { box-sizing: border-box; }
         body {
-            background-color: #E0E7FF;
-            color: #000;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #E0E7FF; color: #000;
+            font-family: 'Inter', sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             min-height: 100vh; margin: 0; padding: 20px;
         }
-
         .card {
-            background: #fff;
-            border: 3px solid #000;
-            box-shadow: 8px 8px 0px #000;
-            padding: 40px;
-            width: 100%;
-            max-width: 500px;
-            border-radius: 0;
+            background: #fff; border: 3px solid #000; box-shadow: 8px 8px 0px #000;
+            padding: 40px; width: 100%; max-width: 500px; border-radius: 0;
         }
-
-        h1 {
-            font-weight: 900;
-            font-size: 2.5rem;
-            margin: 0 0 10px 0;
-            text-transform: uppercase;
-            letter-spacing: -1px;
-            line-height: 1;
-        }
+        h1 { font-weight: 900; font-size: 2.5rem; margin: 0 0 10px 0; text-transform: uppercase; line-height: 1; }
         p { font-size: 1.1rem; margin-bottom: 30px; font-weight: 500; color: #444; }
-
         input {
-            width: 100%;
-            padding: 15px;
-            font-size: 1rem;
-            border: 3px solid #000;
-            background: #f4f4f5;
-            margin-bottom: 20px;
-            font-weight: bold;
-            transition: 0.1s;
-            outline: none;
+            width: 100%; padding: 15px; font-size: 1rem; border: 3px solid #000;
+            background: #f4f4f5; margin-bottom: 20px; font-weight: bold; outline: none;
         }
-        input:focus {
-            background: #fff;
-            box-shadow: 4px 4px 0px #000;
-            transform: translate(-2px, -2px);
-        }
-
+        input:focus { background: #fff; box-shadow: 4px 4px 0px #000; transform: translate(-2px, -2px); }
         button {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.2rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            background-color: #A3E635; /* Lime Green Pop */
-            border: 3px solid #000;
-            cursor: pointer;
-            box-shadow: 4px 4px 0px #000;
-            transition: all 0.1s ease;
+            width: 100%; padding: 15px; font-size: 1.2rem; font-weight: 900;
+            text-transform: uppercase; background-color: #A3E635; border: 3px solid #000;
+            cursor: pointer; box-shadow: 4px 4px 0px #000; transition: all 0.1s ease;
         }
-        button:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 6px 6px 0px #000;
-        }
-        button:active {
-            transform: translate(2px, 2px);
-            box-shadow: 0px 0px 0px #000;
-        }
-
-        .result-box {
-            margin-top: 30px;
-            padding: 20px;
-            border: 3px solid #000;
-            background: #FEF3C7;
-            display: none;
-            word-break: break-all;
-        }
-        .label { font-weight: 900; font-size: 0.8rem; text-transform: uppercase; display: block; margin-bottom: 5px; }
-        .link { font-family: monospace; font-size: 1.1rem; color: #000; text-decoration: underline; font-weight: bold; }
+        button:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #000; }
+        button:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #000; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
         
-        .copy-btn {
-            margin-top: 15px;
-            background: #000;
-            color: #fff;
-            font-size: 0.9rem;
-            padding: 10px;
+        .result-box {
+            margin-top: 30px; padding: 20px; border: 3px solid #000;
+            background: #FEF3C7; display: none; word-break: break-all;
         }
-        .copy-btn:hover { background: #333; color: #fff; }
+        .link { font-family: monospace; font-size: 1.1rem; color: #000; text-decoration: underline; font-weight: bold; }
         .footer { margin-top: 40px; font-weight: 700; font-size: 0.8rem; opacity: 0.5; }
     </style>
 </head>
 <body>
-
     <div class="card">
         <h1>Tidurkan Link.</h1>
-        <p>Shorten your URL into deep sleep mode.</p>
+        <p>Powered by Hidden API Logic.</p>
 
         <input type="text" id="rawUrl" placeholder="https://example.com" autocomplete="off">
-        <button onclick="encrypt()">Generate Link</button>
+        <button id="btnGen" onclick="generate()">Generate Link</button>
 
         <div id="result" class="result-box">
-            <span class="label">Result:</span>
+            <span style="font-weight:900; display:block; margin-bottom:5px;">RESULT:</span>
             <a id="linkResult" href="#" target="_blank" class="link"></a>
-            <button class="copy-btn" onclick="copyLink()">Copy to Clipboard</button>
         </div>
     </div>
+    <div class="footer">NO DATABASE. SERVER-SIDE PROCESSING.</div>
+
     <script>
-        function encrypt() {
-            const input = document.getElementById('rawUrl').value.trim();
-            if(!input) { alert("Isi dulu linknya!"); return; }
+        async function generate() {
+            const input = document.getElementById('rawUrl');
+            const btn = document.getElementById('btnGen');
+            const resultBox = document.getElementById('result');
+            const linkResult = document.getElementById('linkResult');
+            
+            const url = input.value.trim();
+            if(!url) { alert("Isi link dulu bos!"); return; }
 
-            let binary = "";
-            for (let i = 0; i < input.length; i++) {
-                binary += input.charCodeAt(i).toString(2).padStart(8, '0');
+            btn.innerText = "PROCESSING...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/sleep', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if(data.status === 'success') {
+                    linkResult.href = data.result;
+                    linkResult.innerText = data.result;
+                    resultBox.style.display = 'block';
+                } else {
+                    alert("Gagal: " + data.message);
+                }
+
+            } catch (err) {
+                alert("Server Error");
+            } finally {
+                btn.innerText = "GENERATE LINK";
+                btn.disabled = false;
             }
-            
-            const zzzCode = binary.replace(/0/g, 'z').replace(/1/g, 'Z');
-            const finalUrl = window.location.origin + "/" + zzzCode;
-            
-            const linkEl = document.getElementById('linkResult');
-            linkEl.href = finalUrl;
-            linkEl.innerText = finalUrl;
-            
-            document.getElementById('result').style.display = 'block';
-        }
-
-        function copyLink() {
-            const url = document.getElementById('linkResult').href;
-            navigator.clipboard.writeText(url).then(() => {
-                const btn = document.querySelector('.copy-btn');
-                btn.innerText = "COPIED!";
-                setTimeout(() => btn.innerText = "Copy to Clipboard", 2000);
-            });
         }
     </script>
 </body>
@@ -193,44 +166,5 @@ function renderHome() {
 }
 
 function renderError() {
-    return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>404 Not Found</title>
-        <style>
-            body { 
-                background: #FF5A5A; /* Red Alert */
-                color: #fff; 
-                font-family: 'Inter', sans-serif; 
-                height: 100vh; margin: 0;
-                display: flex; flex-direction: column; 
-                align-items: center; justify-content: center; 
-                text-align: center;
-            }
-            .box {
-                border: 4px solid #000;
-                background: #fff;
-                color: #000;
-                padding: 40px;
-                box-shadow: 8px 8px 0px #000;
-            }
-            h1 { font-size: 3rem; margin: 0; font-weight: 900; }
-            p { font-weight: bold; margin: 20px 0; }
-            a { 
-                background: #000; color: #fff; text-decoration: none; 
-                padding: 10px 20px; font-weight: bold; display: inline-block;
-            }
-            a:hover { background: #333; }
-        </style>
-    </head>
-    <body>
-        <div class="box">
-            <h1>404</h1>
-            <p>Link ini tidak valid atau sedang bermimpi.</p>
-            <a href="/">KEMBALI</a>
-        </div>
-    </body>
-    </html>
-    `;
+    return `<!DOCTYPE html><html><body style="background:#FF5A5A;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;text-align:center;"><div style="background:#fff;padding:40px;border:4px solid #000;box-shadow:8px 8px 0 #000;"><h1>404</h1><p>Link Mimpi Buruk.</p><a href="/" style="background:#000;color:#fff;padding:10px 20px;text-decoration:none;font-weight:bold;">HOME</a></div></body></html>`;
 }
