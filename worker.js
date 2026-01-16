@@ -12,7 +12,7 @@ export default {
         if (!originalUrl) return new Response(JSON.stringify({ status: "error", message: "URL empty" }), { status: 400 });
 
         const zzzCode = encodeZzz(originalUrl);
-        const fullShortUrl = `${url.origin}/${zzzCode}`;
+        const fullShortUrl = `https://zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz.my.id/${zzzCode}`;
 
         return new Response(JSON.stringify({ status: "success", result: fullShortUrl }), {
           headers: { "Content-Type": "application/json" }
