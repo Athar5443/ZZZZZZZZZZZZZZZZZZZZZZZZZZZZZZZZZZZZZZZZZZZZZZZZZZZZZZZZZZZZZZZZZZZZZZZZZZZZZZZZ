@@ -9,15 +9,17 @@ export default {
         const body = await request.json();
         const originalUrl = body.url;
 
-        if (!originalUrl) return new Response("URL required", { status: 400 });
+        if (!originalUrl) return new Response(JSON.stringify({ status: "error", message: "URL empty" }), { status: 400 });
 
         const zzzCode = encodeZzz(originalUrl);
         const fullShortUrl = `${url.origin}/${zzzCode}`;
 
-        return Response.json({ status: "success", result: fullShortUrl });
+        return new Response(JSON.stringify({ status: "success", result: fullShortUrl }), {
+          headers: { "Content-Type": "application/json" }
+        });
 
       } catch (e) {
-        return Response.json({ status: "error", message: e.message }, { status: 500 });
+        return new Response(JSON.stringify({ status: "error", message: e.message }), { status: 500 });
       }
     }
 
@@ -97,20 +99,23 @@ function renderHome() {
         }
         button:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #000; }
         button:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #000; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; transform: none; }
         
         .result-box {
             margin-top: 30px; padding: 20px; border: 3px solid #000;
             background: #FEF3C7; display: none; word-break: break-all;
         }
-        .link { font-family: monospace; font-size: 1.1rem; color: #000; text-decoration: underline; font-weight: bold; }
+        .link { font-family: monospace; font-size: 1.1rem; color: #000; text-decoration: underline; font-weight: bold; display: block; margin-bottom: 10px; }
+        .copy-btn {
+            background: #000; color: #fff; font-size: 0.9rem; padding: 10px; width: auto; display: inline-block;
+        }
         .footer { margin-top: 40px; font-weight: 700; font-size: 0.8rem; opacity: 0.5; }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>Tidurkan Link.</h1>
-        <p>Powered by Hidden API Logic.</p>
+        <p>API-Based Neobrutalism Generator.</p>
 
         <input type="text" id="rawUrl" placeholder="https://example.com" autocomplete="off">
         <button id="btnGen" onclick="generate()">Generate Link</button>
@@ -118,9 +123,10 @@ function renderHome() {
         <div id="result" class="result-box">
             <span style="font-weight:900; display:block; margin-bottom:5px;">RESULT:</span>
             <a id="linkResult" href="#" target="_blank" class="link"></a>
+            <button class="copy-btn" onclick="copyLink()">Copy</button>
         </div>
     </div>
-    <div class="footer">NO DATABASE. SERVER-SIDE PROCESSING.</div>
+    <div class="footer">NO CLIENT LOGIC. SECURE API.</div>
 
     <script>
         async function generate() {
@@ -130,12 +136,14 @@ function renderHome() {
             const linkResult = document.getElementById('linkResult');
             
             const url = input.value.trim();
-            if(!url) { alert("Isi link dulu bos!"); return; }
+            if(!url) { alert("Isi link dulu!"); return; }
 
+            // UI Feedback
             btn.innerText = "PROCESSING...";
             btn.disabled = true;
 
             try {
+                // PANGGIL API (Logika disembunyikan di server)
                 const response = await fetch('/api/sleep', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -149,15 +157,23 @@ function renderHome() {
                     linkResult.innerText = data.result;
                     resultBox.style.display = 'block';
                 } else {
-                    alert("Gagal: " + data.message);
+                    alert("Error: " + data.message);
                 }
 
             } catch (err) {
-                alert("Server Error");
+                alert("Gagal menghubungi server.");
+                console.error(err);
             } finally {
                 btn.innerText = "GENERATE LINK";
                 btn.disabled = false;
             }
+        }
+
+        function copyLink() {
+            const url = document.getElementById('linkResult').href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert("Link disalin!");
+            });
         }
     </script>
 </body>
