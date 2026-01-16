@@ -114,8 +114,8 @@ function renderHome() {
 </head>
 <body>
     <div class="card">
-        <h1>Tidurkan Link.</h1>
-        <p>API-Based Neobrutalism Generator.</p>
+        <h1>Zzzz Link.</h1>
+        <p>Zzzz Generator.</p>
 
         <input type="text" id="rawUrl" placeholder="https://example.com" autocomplete="off">
         <button id="btnGen" onclick="generate()">Generate Link</button>
@@ -126,7 +126,7 @@ function renderHome() {
             <button class="copy-btn" onclick="copyLink()">Copy</button>
         </div>
     </div>
-    <div class="footer">NO CLIENT LOGIC. SECURE API.</div>
+    <div class="footer">Zzzz Go Sleep</div>
 
     <script>
         async function generate() {
@@ -143,7 +143,6 @@ function renderHome() {
             btn.disabled = true;
 
             try {
-                // PANGGIL API (Logika disembunyikan di server)
                 const response = await fetch('/api/sleep', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
