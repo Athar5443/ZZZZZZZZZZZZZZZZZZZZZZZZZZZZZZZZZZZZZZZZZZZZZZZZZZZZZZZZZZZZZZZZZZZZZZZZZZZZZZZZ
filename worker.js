@@ -73,6 +73,7 @@ function renderHome() {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zzzz.</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -110,6 +111,24 @@ function renderHome() {
             background: #000; color: #fff; font-size: 0.9rem; padding: 10px; width: auto; display: inline-block;
         }
         .footer { margin-top: 40px; font-weight: 700; font-size: 0.8rem; opacity: 0.5; }
+
+        div:where(.swal2-container) div:where(.swal2-popup) {
+            border-radius: 0 !important;
+            border: 3px solid #000 !important;
+            box-shadow: 8px 8px 0 #000 !important;
+        }
+        div:where(.swal2-container) button.swal2-styled.swal2-confirm {
+            border-radius: 0 !important;
+            background-color: #A3E635 !important;
+            color: #000 !important;
+            border: 3px solid #000 !important;
+            box-shadow: 4px 4px 0 #000 !important;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        div:where(.swal2-container) button.swal2-styled.swal2-confirm:focus {
+            box-shadow: 0 0 0 0 !important;
+        }
     </style>
 </head>
 <body>
@@ -136,9 +155,16 @@ function renderHome() {
             const linkResult = document.getElementById('linkResult');
             
             const url = input.value.trim();
-            if(!url) { alert("Isi link dulu!"); return; }
+            if(!url) { 
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Kosong?',
+                    text: 'Isi link dulu biar bisa tidur!',
+                    confirmButtonText: 'SIAP'
+                });
+                return; 
+            }
 
-            // UI Feedback
             btn.innerText = "PROCESSING...";
             btn.disabled = true;
 
@@ -156,11 +182,19 @@ function renderHome() {
                     linkResult.innerText = data.result;
                     resultBox.style.display = 'block';
                 } else {
-                    alert("Error: " + data.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: "Error: " + data.message
+                    });
                 }
 
             } catch (err) {
-                alert("Gagal menghubungi server.");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: "Gagal menghubungi server."
+                });
                 console.error(err);
             } finally {
                 btn.innerText = "GENERATE LINK";
@@ -171,7 +205,13 @@ function renderHome() {
         function copyLink() {
             const url = document.getElementById('linkResult').href;
             navigator.clipboard.writeText(url).then(() => {
-                alert("Link disalin!");
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: 'Link sudah disalin.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
             });
         }
     </script>
